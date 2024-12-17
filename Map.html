@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Team Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- ArcGIS JavaScript API -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.26/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.26/"></script>
+    <style>
+        html, body, #viewDiv {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #search-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="search-container">
+        <input type="text" id="teamInput" placeholder="Enter team name">
+        <button id="searchButton">Search</button>
+    </div>
+    <div id="viewDiv"></div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/PopupTemplate"
+        ], function(Map, MapView, Graphic, GraphicsLayer, PopupTemplate) {
+            
+            // Create the Map
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+
+            const view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [-100, 40], // Default map center
+                zoom: 4
+            });
+
+            // Graphics Layer for dynamic markers
+            const graphicsLayer = new GraphicsLayer();
+            map.add(graphicsLayer);
+
+            // Function to get team data (mocked instead of CSVs)
+            const teamData = [
+                {
+                    team: "Team A",
+                    latitude: 37.7749,
+                    longitude: -122.4194,
+                    stadium: "Stadium A",
+                    capacity: "50,000",
+                    year_built: "1985",
+                    last_expanded: "2005",
+                    conference: "Conference A",
+                    division: "Division 1",
+                    logo: "https://example.com/teamA_logo.png"
+                },
+                {
+                    team: "Team B",
+                    latitude: 34.0522,
+                    longitude: -118.2437,
+                    stadium: "Stadium B",
+                    capacity: "75,000",
+                    year_built: "1990",
+                    last_expanded: "2010",
+                    conference: "Conference B",
+                    division: "Division 2",
+                    logo: "https://example.com/teamB_logo.png"
+                }
+            ];
+
+            // Search functionality
+            document.getElementById("searchButton").addEventListener("click", function() {
+                const teamName = document.getElementById("teamInput").value.trim();
+                const team = teamData.find(t => t.team.toLowerCase() === teamName.toLowerCase());
+
+                if (team) {
+                    // Clear previous markers
+                    graphicsLayer.removeAll();
+
+                    // Create point geometry
+                    const point = {
+                        type: "point",
+                        longitude: team.longitude,
+                        latitude: team.latitude
+                    };
+
+                    // Create a symbol (marker)
+                    const markerSymbol = {
+                        type: "picture-marker",
+                        url: team.logo,
+                        width: "50px",
+                        height: "50px"
+                    };
+
+                    // Pop-up template
+                    const popupTemplate = new PopupTemplate({
+                        title: `${team.team} Stadium`,
+                        content: `
+                            <p><b>Stadium:</b> ${team.stadium}</p>
+                            <p><b>Capacity:</b> ${team.capacity}</p>
+                            <p><b>Year Built:</b> ${team.year_built}</p>
+                            <p><b>Last Expanded:</b> ${team.last_expanded}</p>
+                            <p><b>Conference:</b> ${team.conference}</p>
+                            <p><b>Division:</b> ${team.division}</p>
+                            <img src="${team.logo}" alt="${team.team} Logo" style="width: 100px; height: auto;">
+                        `
+                    });
+
+                    // Create the graphic
+                    const pointGraphic = new Graphic({
+                        geometry: point,
+                        symbol: markerSymbol,
+                        popupTemplate: popupTemplate
+                    });
+
+                    // Add to the map
+                    graphicsLayer.add(pointGraphic);
+
+                    // Center the view on the marker
+                    view.goTo({
+                        target: point,
+                        zoom: 12
+                    });
+                } else {
+                    alert("Team not found. Please check the name and try again.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
