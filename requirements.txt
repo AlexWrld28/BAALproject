@@ -1,0 +1,8 @@
+PyQt5
+PyQtWebEngine
+cfbd
+folium
+requests
+certifi
+googlesearch-python
+Pillow
